@@ -6,3 +6,9 @@ AMLynx/
 ├── docker-compose.yml
 ├── .env.example
 ├── README.md
+├── src/
+│   ├── common/
+│   │   └── config.py
+│   ├── db/
+│   │   ├── models.py
+│   │   └── session.py
