@@ -6,6 +6,8 @@ AMLynx/
 ├── docker-compose.yml
 ├── .env.example
 ├── README.md
+├── scripts/
+│   └── seed_data.py
 ├── src/
 │   ├── common/
 │   │   └── config.py
