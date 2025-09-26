@@ -1,73 +1,125 @@
-from typing import Dict, Any, List, Tuple
-from pydantic import BaseModel, Field
-import operator
-import math
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Dict, Iterable, List, Tuple, Callable
+from datetime import timedelta
+import yaml
+from loguru import logger
+from sqlalchemy.orm import Session
+from db.models import Transaction
+from common.config import get_settings
 
-OPS = {
-    ">": operator.gt,
-    "<": operator.lt,
-    ">=": operator.ge,
-    "<=": operator.le,
-    "==": operator.eq,
-    "!=": operator.ne,
-}
-
-class RuleCondition(BaseModel):
-    field: str
-    op: str
-    value: float
-
-class RuleAction(BaseModel):
-    add_risk: float = 0.0
-    tag: str | None = None
-
-class Rule(BaseModel):
-    id: str
+# ---- Base & Registry ----
+class Rule(ABC):
     name: str
-    conditions: List[RuleCondition]
-    actions: List[RuleAction] = Field(default_factory=list)
-    enabled: bool = True
+    weight: float
+    @abstractmethod
+    def evaluate(self, tx: Dict[str, Any], history: Iterable[Dict[str, Any]]) -> Tuple[float, Dict[str, Any]]:
+        """
+        Returns (score, details); 0 <= score.
+        details should be a compact explanation for the alert UI.
+        """
+        ...
 
-def evaluate_rule(rule: Rule, tx: Dict[str, Any]) -> Tuple[float, List[str]]:
-    """
-    Evaluate a single rule against transaction features.
-    Returns: (risk_delta, tags)
-    """
-    if not rule.enabled:
-        return 0.0, []
+_RULES: dict[str, Callable[[dict], Rule]] = {}
 
-    # all conditions must hold (AND semantics)
-    for cond in rule.conditions:
-        left = tx.get(cond.field)
-        if left is None:
-            return 0.0, []
-        op_func = OPS.get(cond.op)
-        if op_func is None:
-            return 0.0, []
-        try:
-            if not op_func(left, cond.value):
-                return 0.0, []
-        except Exception:
-            return 0.0, []
+def register(name: str):
+    def _wrap(ctor: Callable[[dict], Rule]):
+        _RULES[name] = ctor
+        return ctor
+    return _wrap
 
-    risk = 0.0
-    tags = []
-    for act in rule.actions:
-        if act.add_risk:
-            # ensure risk in [0,1]
-            risk = min(1.0, risk + float(act.add_risk))
-        if act.tag:
-            tags.append(act.tag)
-    return risk, tags
+# ---- Concrete Rules ----
+@register("amount_over")
+class AmountOver(Rule):
+    def __init__(self, cfg: dict):
+        self.name = cfg.get("name", "amount_over")
+        self.threshold = float(cfg["threshold"])
+        self.weight = float(cfg.get("weight", 1.0))
+    def evaluate(self, tx, history):
+        amt = float(tx.get("amount", 0.0))
+        if amt > self.threshold:
+            score = (amt - self.threshold) / max(self.threshold, 1.0) * self.weight
+            return score, {"threshold": self.threshold, "amount": amt}
+        return 0.0, {}
 
-def evaluate_rules(rules: List[Rule], tx: Dict[str, Any]) -> Tuple[float, List[str]]:
-    """
-    Evaluate many rules, sum risk contributions (clamped) and union tags.
-    """
-    total_risk = 0.0
-    tags = []
-    for r in rules:
-        dr, t = evaluate_rule(r, tx)
-        total_risk = min(1.0, total_risk + dr)
-        tags.extend(t)
-    return total_risk, list(set(tags))
+@register("velocity")
+class Velocity(Rule):
+    def __init__(self, cfg: dict):
+        self.name = cfg.get("name", "velocity")
+        self.window_hours = int(cfg.get("window_hours", 24))
+        self.max_tx = int(cfg.get("max_tx", 10))
+        self.weight = float(cfg.get("weight", 1.0))
+    def evaluate(self, tx, history):
+        from datetime import datetime, timezone
+        t_now = tx["timestamp"]
+        win_start = t_now - timedelta(hours=self.window_hours)
+        cnt = sum(1 for h in history if h["timestamp"] >= win_start)
+        if cnt > self.max_tx:
+            return (cnt - self.max_tx) / max(self.max_tx, 1) * self.weight, {"count": cnt}
+        return 0.0, {}
+
+@register("country_risk")
+class CountryRisk(Rule):
+    def __init__(self, cfg: dict):
+        self.name = cfg.get("name", "country_risk")
+        self.high_risk = set(cfg.get("high_risk", []))
+        self.weight = float(cfg.get("weight", 1.0))
+    def evaluate(self, tx, history):
+        c = tx.get("country", "").upper()
+        if c in self.high_risk:
+            return self.weight, {"country": c}
+        return 0.0, {}
+
+# ---- Loader & Evaluator ----
+@dataclass
+class RuleOutcome:
+    rule: str
+    score: float
+    details: Dict[str, Any]
+
+class RuleEngine:
+    def __init__(self, rules: List[Rule]):
+        self.rules = rules
+
+    @classmethod
+    def from_yaml(cls, path: str) -> "RuleEngine":
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        rules_cfg = data.get("rules", [])
+        rules = []
+        for rc in rules_cfg:
+            rtype = rc["type"]
+            ctor = _RULES.get(rtype)
+            if not ctor:
+                raise ValueError(f"Unknown rule type: {rtype}")
+            rules.append(ctor(rc))
+        logger.info(f"Loaded {len(rules)} rules from {path}")
+        return cls(rules)
+
+    def evaluate(self, tx: Dict[str, Any], history: Iterable[Dict[str, Any]]) -> Tuple[float, List[RuleOutcome]]:
+        outcomes: List[RuleOutcome] = []
+        total = 0.0
+        for r in self.rules:
+            s, d = r.evaluate(tx, history)
+            if s > 0:
+                outcomes.append(RuleOutcome(r.name, s, d))
+                total += s
+        return total, outcomes
+
+# Optional: helper to fetch account history efficiently
+def fetch_account_history(db: Session, account_id: int, hours: int = 72) -> List[Dict[str, Any]]:
+    from sqlalchemy import select, func
+    from datetime import datetime, timedelta, timezone
+    from db.models import Transaction
+    t_end = datetime.utcnow()
+    t_start = t_end - timedelta(hours=hours)
+    rows = db.execute(
+        select(Transaction).where(
+            Transaction.account_id == account_id,
+            Transaction.timestamp >= t_start
+        ).order_by(Transaction.timestamp.desc())
+    ).scalars().all()
+    return [dict(
+        id=r.id, amount=r.amount, country=r.country, timestamp=r.timestamp, currency=r.currency
+    ) for r in rows]
