@@ -1,50 +1,47 @@
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Numeric,
-    DateTime,
-    Boolean,
-    JSON,
-    ForeignKey,
-    func,
-)
-from sqlalchemy.orm import declarative_base, relationship
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, Float, DateTime, ForeignKey, JSON, Index, UniqueConstraint
 
-Base = declarative_base()
-
-def gen_uuid():
-    return str(uuid.uuid4())
+class Base(DeclarativeBase): pass
 
 class Account(Base):
     __tablename__ = "accounts"
-    account_id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    customer_hash = Column(String(128), nullable=False, index=True)
-    kyc_level = Column(Integer, default=0)
-    country = Column(String(2), nullable=True)
-    opened_at = Column(DateTime, server_default=func.now())
-    customer_risk_score = Column(Numeric(5,4), default=0.0)
-    metadata = Column(JSON, default={})
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    external_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    country: Mapped[str] = mapped_column(String(2))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    outgoing = relationship("Transaction", back_populates="src_account_rel", foreign_keys="Transaction.src_account")
-    incoming = relationship("Transaction", back_populates="dst_account_rel", foreign_keys="Transaction.dst_account")
+    transactions: Mapped[list["Transaction"]] = relationship(back_populates="account")
 
 class Transaction(Base):
     __tablename__ = "transactions"
-    tx_id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    src_account = Column(UUID(as_uuid=False), ForeignKey("accounts.account_id"), nullable=False, index=True)
-    dst_account = Column(UUID(as_uuid=False), ForeignKey("accounts.account_id"), nullable=False, index=True)
-    amount = Column(Numeric(18,4), nullable=False)
-    currency = Column(String(3), nullable=False, default="USD")
-    channel = Column(String(32), nullable=True)
-    merchant_code = Column(String(20), nullable=True)
-    tx_ts = Column(DateTime, server_default=func.now(), index=True)
-    ip_hash = Column(String(128), nullable=True)
-    geo = Column(JSON, nullable=True)
-    raw_payload = Column(JSON, nullable=True)
-    processed = Column(Boolean, default=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), index=True)
+    amount: Mapped[float] = mapped_column(Float)
+    currency: Mapped[str] = mapped_column(String(3))
+    country: Mapped[str] = mapped_column(String(2))
+    timestamp: Mapped[datetime] = mapped_column(DateTime, index=True)
+    metadata: Mapped[dict] = mapped_column(JSON, default={})
 
-    src_account_rel = relationship("Account", foreign_keys=[src_account])
-    dst_account_rel = relationship("Account", foreign_keys=[dst_account])
+    account: Mapped["Account"] = relationship(back_populates="transactions")
+    __table_args__ = (
+        Index("ix_tx_account_time", "account_id", "timestamp"),
+    )
+
+class RuleDef(Base):
+    __tablename__ = "rule_defs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(64))
+    version: Mapped[str] = mapped_column(String(16), default="v1")
+    config: Mapped[dict] = mapped_column(JSON)
+    __table_args__ = (UniqueConstraint("name", "version", name="uq_rule_name_version"),)
+
+class Alert(Base):
+    __tablename__ = "alerts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    transaction_id: Mapped[int] = mapped_column(ForeignKey("transactions.id"), index=True)
+    final_score: Mapped[float] = mapped_column(Float)
+    rule_score: Mapped[float] = mapped_column(Float)
+    anomaly_score: Mapped[float] = mapped_column(Float)
+    explanation: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
