@@ -39,3 +39,12 @@ AMLynx is built as a set of lightweight services for **ingestion**, **scoring**,
 * [License](#license)
 
 ---
+## Why AMLynx?
+
+Most AML stacks are either rigid **rule systems** (high false positives) or opaque **ML models** (hard to explain). AMLynx fuses both:
+
+* **Rules** for deterministic business policy
+* **Unsupervised models** to catch **unknown-unknowns**
+* **Explainability** so analysts can trust and tune the system
+
+---
