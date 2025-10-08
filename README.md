@@ -1,92 +1,107 @@
-# AMLynx
+# 🦊 AMLynx
 
-> A deep learning–powered anti-money-laundering (AML) engine that blends adaptive rules with anomaly detection to surface suspicious activity in financial transactions. ([GitHub][1])
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](#license)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#requirements)
-[![API](https://img.shields.io/badge/API-FastAPI-009688.svg)](#api)
-[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](#roadmap)
-
-AMLynx is built as a set of lightweight services for **ingestion**, **scoring**, and **explanation**, exposing **REST** endpoints (and optional **gRPC**) for integration with ba# AMLynx
-
-> A deep learning–powered anti-money-laundering (AML) engine that blends adaptive rules with anomaly detection to surface suspicious activity in financial transactions. ([GitHub][1])
+> **AMLynx** is an advanced **Anti-Money Laundering (AML) intelligence framework** for detecting suspicious financial activities using a **hybrid approach** that blends **rule-based systems** with **machine-learning anomaly detection**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](#license)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#requirements)
-[![API](https://img.shields.io/badge/API-FastAPI-009688.svg)](#api)
-[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](#roadmap)
-
-AMLynx is built as a set of lightweight services for **ingestion**, **scoring**, and **explanation**, exposing **REST** endpoints (and optional **gRPC**) for integration with banking systems and case-management tools.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](#requirements)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](#api)
+[![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)]()
 
 ---
-## Table of Contents
 
-* [Why AMLynx?](#why-amlynx)
-* [Features](#features)
+## 📘 Table of Contents
+
+* [Overview](#overview)
+* [Key Features](#key-features)
 * [Architecture](#architecture)
-* [Quickstart (Docker)](#quickstart-docker)
-* [Local Development](#local-development)
+* [Folder Structure](#folder-structure)
+* [Quick Start (Docker)](#quick-start-docker)
+* [Development Setup](#development-setup)
 * [Configuration](#configuration)
-* [Data Flow](#data-flow)
-* [Rules Engine](#rules-engine)
+* [Data Pipeline](#data-pipeline)
+* [Rule Engine](#rule-engine)
 * [Anomaly Detection](#anomaly-detection)
+* [Hybrid Scoring](#hybrid-scoring)
 * [API](#api)
+* [Logging & Monitoring](#logging--monitoring)
 * [Testing](#testing)
-* [Performance & Scaling](#performance--scaling)
-* [Security & Compliance](#security--compliance)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
 
 ---
-## Why AMLynx?
 
-Most AML stacks are either rigid **rule systems** (high false positives) or opaque **ML models** (hard to explain). AMLynx fuses both:
+## 🧠 Overview
 
-* **Rules** for deterministic business policy
-* **Unsupervised models** to catch **unknown-unknowns**
-* **Explainability** so analysts can trust and tune the system
+**AMLynx** provides a modular, production-ready foundation for **automated AML screening** in financial systems.
+It unifies:
 
----
-## Features
+* **Business rules** (expert knowledge)
+* **Anomaly detection models** (data-driven insight)
+* **Hybrid scoring** for explainable and tunable alerts
 
-* **Microservices** with FastAPI (REST) and optional gRPC gateway for low-latency scoring. ([GitHub][1])
-* **Modular rules engine** with CRUD for rules and real-time evaluation. ([GitHub][1])
-* **Anomaly detection** pipeline for transaction-level and customer-level monitoring.
-* **ETL utilities** to clean/normalize raw feeds before scoring. ([GitHub][1])
-* **SQLAlchemy models** and DB session management for portability. ([GitHub][1])
-* **Seed data** script to bootstrap a demo environment. ([GitHub][1])
-* **Docker** support for one-command spin-up. (Repo ships a `docker-compose.yml`.) ([GitHub][2])
-* **Tests** to keep behavior stable while you iterate. ([GitHub][1])
+Built with **FastAPI**, **SQLAlchemy**, and **modern ML libraries**, AMLynx is designed for **banks, fintechs, and regulators** who need transparency, extensibility, and auditability in their AML workflows.
 
 ---
 
-## Architecture
+## ✨ Key Features
+
+✅ **Modular Architecture** – Independent, pluggable modules for rules, models, features, and scoring
+✅ **Hybrid Risk Scoring** – Combine ML anomaly scores and rule-based logic
+✅ **FastAPI REST Interface** – Production-ready API with OpenAPI documentation
+✅ **Pydantic Schemas** – Type-safe validation for all inputs/outputs
+✅ **Batch & Streaming ETL** – Supports both batch ingestion and near-real-time pipelines
+✅ **SQLAlchemy ORM** – Database-agnostic (PostgreSQL, SQLite, etc.)
+✅ **Unified Logging** – Centralized JSON logging for analytics and compliance
+✅ **Containerized Deployment** – Ship and scale with Docker Compose or Kubernetes
+✅ **Extensible** – Add new anomaly models, rules, or scoring logic with minimal coupling
+
+---
+
+## 🧩 Architecture
+
+AMLynx follows a **layered architecture**:
 
 ```
-AMLynx/
-├── pyproject.toml                # Project deps & tooling
-├── docker-compose.yml            # Dev stack (API + DB + extras)
-├── .env.example                  # Config template
-├── scripts/
-│   └── seed_data.py              # Load demo fixtures
-├── src/
-│   ├── api/                      # Service layer (REST + gRPC)
-│   │   ├── gateway/              # Auth, routing, gateway config
-│   │   ├── transactions/         # Ingestion & scoring endpoints
-│   │   └── rules_engine/         # Rule CRUD + evaluation endpoints
-│   ├── common/
-│   │   └── config.py             # Settings & env parsing
-│   ├── db/
-│   │   ├── models.py             # SQLAlchemy ORM models
-│   │   └── session.py            # Session/engine management
-│   ├── data/
-│   │   └── etl.py                # Transforms & validators
-│   └── rules_engine/
-│       └── engine.py             # Rule registration & execution
-└── tests/                        # Unit/integration tests
+                ┌─────────────────────────────┐
+                │         API Layer           │
+                │ (FastAPI REST + Schemas)    │
+                └──────────────┬──────────────┘
+                               │
+                 ┌─────────────▼─────────────┐
+                 │       Pipeline Layer      │
+                 │ (ETL → Features → Rules → │
+                 │  Anomaly → Hybrid Scoring)│
+                 └─────────────┬─────────────┘
+                               │
+                 ┌─────────────▼─────────────┐
+                 │        Data Layer         │
+                 │ (DB Models + Storage)     │
+                 └─────────────┬─────────────┘
+                               │
+                 ┌─────────────▼─────────────┐
+                 │   Common & Core Utilities │
+                 │ (Config, Logging, Helpers)│
+                 └───────────────────────────┘
 ```
 
-*The folders and service split are taken from the repo layout.* ([GitHub][1])
+---
+
+## 📁 Folder Structure
+
+| Directory         | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| **aml/**          | Core AML intelligence logic — primary anomaly model(s) and risk aggregation |
+| **anomaly/**      | Low-level detectors (Isolation Forest, LOF, etc.) and explainers            |
+| **api/**          | FastAPI app exposing endpoints for scoring, transactions, and health checks |
+| **common/**       | Logging setup, configuration management, and shared utilities               |
+| **data/**         | ETL batch scripts for data cleaning, transformation, and ingestion          |
+| **db/**           | SQLAlchemy ORM models and session management                                |
+| **features/**     | Feature extraction and feature-store logic                                  |
+| **pipeline/**     | Orchestrates end-to-end scoring workflow                                    |
+| **rules_engine/** | Business rule registration and evaluation engine                            |
+| **schemas/**      | Pydantic models for input/output validation                                 |
+| **scoring/**      | Hybrid logic combining rule and anomaly scores                              |
 
 ---
