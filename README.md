@@ -313,5 +313,49 @@ Run:
 ```bash
 pytest --maxfail=1 --disable-warnings -q
 ```
+## 🗺️ Roadmap
+
+* [ ] Add CI/CD (GitHub Actions)
+* [ ] Implement Autoencoder anomaly model
+* [ ] Kafka streaming ingestion
+* [ ] Model registry & versioning
+* [ ] Web dashboard for analyst alerts
+* [ ] Explainability (SHAP/LIME) integration
+* [ ] Add synthetic dataset for benchmarks
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo and create a feature branch.
+2. Write or update unit tests.
+3. Ensure formatting (`black`, `ruff`) and typing (`mypy`) pass.
+4. Submit a pull request with detailed description.
+
+> Please open an issue first if you’re proposing large changes.
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 Acknowledgements
+
+Built with ❤️ using:
+
+* [FastAPI](https://fastapi.tiangolo.com/)
+* [SQLAlchemy](https://www.sqlalchemy.org/)
+* [scikit-learn](https://scikit-learn.org/)
+* [Pydantic](https://pydantic-docs.helpmanual.io/)
+
+---
+
+## 🧭 Maintainer
+
+**[benefoon](https://github.com/benefoon)** — Creator & Maintainer of AMLynx
+
 
 
