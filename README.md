@@ -48,3 +48,14 @@ Most AML stacks are either rigid **rule systems** (high false positives) or opaq
 * **Explainability** so analysts can trust and tune the system
 
 ---
+## Features
+
+* **Microservices** with FastAPI (REST) and optional gRPC gateway for low-latency scoring. ([GitHub][1])
+* **Modular rules engine** with CRUD for rules and real-time evaluation. ([GitHub][1])
+* **Anomaly detection** pipeline for transaction-level and customer-level monitoring.
+* **ETL utilities** to clean/normalize raw feeds before scoring. ([GitHub][1])
+* **SQLAlchemy models** and DB session management for portability. ([GitHub][1])
+* **Seed data** script to bootstrap a demo environment. ([GitHub][1])
+* **Docker** support for one-command spin-up. (Repo ships a `docker-compose.yml`.) ([GitHub][2])
+* **Tests** to keep behavior stable while you iterate. ([GitHub][1])
+
