@@ -266,4 +266,17 @@ Configurable weights are set in `.env` or `common/config.py`.
 Returns risk levels (Low / Medium / High) with explainability.
 
 ---
+## 🌐 API
+
+| Method | Endpoint              | Description                         |
+| ------ | --------------------- | ----------------------------------- |
+| `POST` | `/transactions/score` | Score one or more transactions      |
+| `GET`  | `/rules`              | List all active rules               |
+| `POST` | `/rules/test`         | Test a new rule against sample data |
+| `GET`  | `/healthz`            | Health check                        |
+
+OpenAPI docs: **`/docs`**
+ReDoc: **`/redoc`**
+
+---
 
