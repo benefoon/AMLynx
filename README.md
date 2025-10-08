@@ -1,9 +1,21 @@
 # AMLynx
 
-**AMLynx** is a modular, production-ready **Anti-Money Laundering (AML)** scoring service. It combines a **data-driven rules engine** with **unsupervised anomaly detection** to produce an interpretable, real-time **risk score** and optional alerts for incoming transactions.
+> A deep learning–powered anti-money-laundering (AML) engine that blends adaptive rules with anomaly detection to surface suspicious activity in financial transactions. ([GitHub][1])
 
-The project is designed for:
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](#license)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#requirements)
+[![API](https://img.shields.io/badge/API-FastAPI-009688.svg)](#api)
+[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](#roadmap)
 
-* **Clarity & extensibility** (typed Python, modular package layout, rule registry)
-* **Operational readiness** (FastAPI, JSON logging, Postgres, CI hooks)
-* **Reproducibility** (config in env, persisted ML models, seed & train scripts)
+AMLynx is built as a set of lightweight services for **ingestion**, **scoring**, and **explanation**, exposing **REST** endpoints (and optional **gRPC**) for integration with ba# AMLynx
+
+> A deep learning–powered anti-money-laundering (AML) engine that blends adaptive rules with anomaly detection to surface suspicious activity in financial transactions. ([GitHub][1])
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](#license)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#requirements)
+[![API](https://img.shields.io/badge/API-FastAPI-009688.svg)](#api)
+[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](#roadmap)
+
+AMLynx is built as a set of lightweight services for **ingestion**, **scoring**, and **explanation**, exposing **REST** endpoints (and optional **gRPC**) for integration with banking systems and case-management tools.
+
+---
