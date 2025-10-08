@@ -19,3 +19,23 @@ AMLynx is built as a set of lightweight services for **ingestion**, **scoring**,
 AMLynx is built as a set of lightweight services for **ingestion**, **scoring**, and **explanation**, exposing **REST** endpoints (and optional **gRPC**) for integration with banking systems and case-management tools.
 
 ---
+## Table of Contents
+
+* [Why AMLynx?](#why-amlynx)
+* [Features](#features)
+* [Architecture](#architecture)
+* [Quickstart (Docker)](#quickstart-docker)
+* [Local Development](#local-development)
+* [Configuration](#configuration)
+* [Data Flow](#data-flow)
+* [Rules Engine](#rules-engine)
+* [Anomaly Detection](#anomaly-detection)
+* [API](#api)
+* [Testing](#testing)
+* [Performance & Scaling](#performance--scaling)
+* [Security & Compliance](#security--compliance)
+* [Roadmap](#roadmap)
+* [Contributing](#contributing)
+* [License](#license)
+
+---
