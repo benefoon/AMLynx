@@ -279,4 +279,39 @@ OpenAPI docs: **`/docs`**
 ReDoc: **`/redoc`**
 
 ---
+## 📊 Logging & Monitoring
+
+Configured in `common/logging.py`:
+
+* JSON-structured logs (ready for ELK / Loki)
+* Configurable log levels per module
+* Request-level tracing with FastAPI middleware
+
+Example log output:
+
+```json
+{
+  "timestamp": "2025-10-09T11:42:21Z",
+  "module": "pipeline.scoring",
+  "level": "INFO",
+  "message": "Transaction 984212 scored 0.81 risk"
+}
+```
+
+---
+
+## 🧪 Testing
+
+Tests are under `/tests` and cover:
+
+* Rule evaluation logic
+* Anomaly detection predictions
+* End-to-end pipeline integration
+
+Run:
+
+```bash
+pytest --maxfail=1 --disable-warnings -q
+```
+
 
