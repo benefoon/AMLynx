@@ -59,3 +59,34 @@ Most AML stacks are either rigid **rule systems** (high false positives) or opaq
 * **Docker** support for one-command spin-up. (Repo ships a `docker-compose.yml`.) ([GitHub][2])
 * **Tests** to keep behavior stable while you iterate. ([GitHub][1])
 
+---
+
+## Architecture
+
+```
+AMLynx/
+├── pyproject.toml                # Project deps & tooling
+├── docker-compose.yml            # Dev stack (API + DB + extras)
+├── .env.example                  # Config template
+├── scripts/
+│   └── seed_data.py              # Load demo fixtures
+├── src/
+│   ├── api/                      # Service layer (REST + gRPC)
+│   │   ├── gateway/              # Auth, routing, gateway config
+│   │   ├── transactions/         # Ingestion & scoring endpoints
+│   │   └── rules_engine/         # Rule CRUD + evaluation endpoints
+│   ├── common/
+│   │   └── config.py             # Settings & env parsing
+│   ├── db/
+│   │   ├── models.py             # SQLAlchemy ORM models
+│   │   └── session.py            # Session/engine management
+│   ├── data/
+│   │   └── etl.py                # Transforms & validators
+│   └── rules_engine/
+│       └── engine.py             # Rule registration & execution
+└── tests/                        # Unit/integration tests
+```
+
+*The folders and service split are taken from the repo layout.* ([GitHub][1])
+
+---
