@@ -34,3 +34,18 @@ class AlertPrioritizer:
                 if row["anomaly_score"] > 0.7
                 else "Rule violation + moderate anomaly"
             )
+
+            confidence = min(0.99, row["risk_score"] * 1.2)
+
+            prioritized.append(
+                PrioritizedAlert(
+                    transaction_id=int(row["transaction_id"]),
+                    risk_score=float(row["risk_score"]),
+                    primary_reason=primary_reason,
+                    confidence=confidence,
+                    explanation=row.get("explanation", {}),
+                )
+            )
+
+        logger.info("Generated %d prioritized alerts", len(prioritized))
+        return prioritized
